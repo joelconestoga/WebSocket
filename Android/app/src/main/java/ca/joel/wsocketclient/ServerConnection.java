@@ -1,61 +1,33 @@
 package ca.joel.wsocketclient;
 
-import android.os.Handler;
-
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 
 
-public class ServerConnection {
-
-    public enum ConnectionStatus {
-        DISCONNECTED,
-        CONNECTED
-    }
+public class ServerConnection extends WebSocketListener {
 
     public interface ServerListener {
         void onNewMessage(String message);
-        void onStatusChange(ConnectionStatus status);
     }
 
     private String url;
     private OkHttpClient client;
     private WebSocket wSocket;
 
-    private Handler messageHandler;
-    private Handler statusHandler;
-    private Handler failureHandler;
-
     private ServerListener listener;
 
-    public ServerConnection(String url) {
+    public ServerConnection(String url)  {
         this.url = url;
 
         client = new OkHttpClient.Builder()
                 .readTimeout(3,  TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true)
                 .build();
-
-        messageHandler = new Handler(msg -> {
-            this.listener.onNewMessage((String) msg.obj);
-            return true;
-        }
-        );
-
-        statusHandler = new Handler(msg -> {
-            this.listener.onStatusChange((ConnectionStatus) msg.obj);
-            return true;
-        }
-        );
-
-        failureHandler = new Handler(msg -> {
-            disconnect();
-            return true;
-        }
-        );
     }
 
     public void connect(ServerListener listener) {
@@ -64,10 +36,7 @@ public class ServerConnection {
 
         Request request = new Request.Builder().url(url).build();
 
-        SocketListener socketListener = new SocketListener(messageHandler,
-                statusHandler, failureHandler);
-
-        wSocket = client.newWebSocket(request, socketListener);
+        wSocket = client.newWebSocket(request, this);
     }
 
     public void sendMessage(String message) {
@@ -76,8 +45,28 @@ public class ServerConnection {
 
     public void disconnect() {
         wSocket.cancel();
-        listener = null;
-        messageHandler.removeCallbacksAndMessages(null);
-        statusHandler.removeCallbacksAndMessages(null);
+    }
+
+    @Override
+    public void onOpen(WebSocket webSocket, Response response) {
+        listener.onNewMessage("Connected");
+    }
+
+    @Override
+    public void onMessage(WebSocket webSocket, String text) {
+        if (listener != null)
+            listener.onNewMessage(text);
+    }
+
+    @Override
+    public void onClosed(WebSocket webSocket, int code, String reason) {
+        if (listener != null)
+            listener.onNewMessage("Disconnected");
+    }
+
+    @Override
+    public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+        if (listener != null)
+            listener.onNewMessage("Disconnected");
     }
 }
