@@ -7,7 +7,7 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity implements ServerConnection.ServerListener {
 
-    private ServerConnection wSocket;
+    private ServerConnection server;
 
     private TextView txvLog;
 
@@ -16,7 +16,7 @@ public class MainActivity extends AppCompatActivity implements ServerConnection.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        wSocket = new ServerConnection("ws://10.0.2.2:8080/webtech8185/mysocket");
+        server = new ServerConnection("ws://10.0.2.2:8080/webtech8185/mysocket");
 
         setupButtons();
     }
@@ -25,10 +25,10 @@ public class MainActivity extends AppCompatActivity implements ServerConnection.
         txvLog = (TextView) findViewById(R.id.txvLog);
 
         Button btnConnect = (Button) findViewById(R.id.btnConnect);
-        btnConnect.setOnClickListener(v -> wSocket.connect(MainActivity.this));
+        btnConnect.setOnClickListener(v -> server.connect(MainActivity.this));
 
         Button btnListFiles = (Button) findViewById(R.id.btnListFiles);
-        btnListFiles.setOnClickListener(v -> wSocket.sendMessage("listFiles"));
+        btnListFiles.setOnClickListener(v -> server.sendMessage("listFiles"));
     }
 
     @Override
