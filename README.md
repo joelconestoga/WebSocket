@@ -8,7 +8,7 @@ Highlights
 * List all uploaded files on server
 * No HTTP, all communication/authentication through WebSocket
 * Java Server
-* JavaScript Client (Browser)
+* HTML/Bootstrap/JavaScript Client (Browser)
 * Android Client (Mobile)
 
 JavaScript WebSocket Client
